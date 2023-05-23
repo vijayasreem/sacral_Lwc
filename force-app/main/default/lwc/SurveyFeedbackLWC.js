@@ -1,60 +1,47 @@
-.
-
-import { LightningElement, track, api } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getQuestions from '@salesforce/apex/SurveyQuestionsController.getQuestions';
-import saveResponse from '@salesforce/apex/SurveyQuestionsController.saveResponse';
+import { LightningElement, api, track } from 'lwc';
+import getSurveyQuestion from '@salesforce/apex/SurveyQuestionController.getSurveyQuestion';
+import saveSurveyResponse from '@salesforce/apex/SurveyQuestionController.saveSurveyResponse';
 
 export default class SurveyFeedback extends LightningElement {
-    @api recordId;
-    @track questions;
-    @track selectedAnswers = [];
-    @track surveyCompleted = false;
+    @track surveyQuestions;
+    @track surveyResponses = [];
+    @api surveyId;
 
+    // Retrieve survey questions from server
     connectedCallback() {
-        getQuestions({
-            surveyId: this.recordId
-        })
-        .then(result => {
-            this.questions = result;
-        })
-        .catch(error => {
-            this.showToast('ERROR', error.body.message, 'error');
-        });
+        getSurveyQuestion({ surveyId: this.surveyId })
+            .then(result => {
+                this.surveyQuestions = result;
+            })
+            .catch(error => {
+                console.log('error', error);
+            });
     }
 
-    handleSelection(event) {
+    // Handle selection of answer
+    handleAnswerSelect(event) {
         const questionId = event.detail.questionId;
-        const answerId = event.detail.answerId;
-        const selectedAnswer = {
-            questionId,
-            answerId
-        };
 
-        this.selectedAnswers = [...this.selectedAnswers, selectedAnswer];
+        // Find the response for the question
+        let response = this.surveyResponses.find(response => response.Question__c === questionId);
+        if (!response) {
+            // If the response is not found, create a new one
+            response = { Question__c: questionId };
+            this.surveyResponses.push(response);
+        }
+
+        // Store the answer
+        response.Answer__c = event.detail.answerId;
     }
 
-    handleSubmit() {
-        saveResponse({
-            surveyId: this.recordId,
-            selectedAnswers: this.selectedAnswers
-        })
-        .then(() => {
-            this.showToast('SUCCESS', 'Survey response saved successfully', 'success');
-            this.surveyCompleted = true;
-        })
-        .catch(error => {
-            this.showToast('ERROR', error.body.message, 'error');
-        });
+    // Handle submission of survey
+    handleSurveySubmit() {
+        saveSurveyResponse({ surveyResponses: this.surveyResponses })
+            .then(result => {
+                console.log('Survey response saved', result);
+            })
+            .catch(error => {
+                console.log('error', error);
+            });
     }
-
-    showToast(title, message, variant) {
-        const evt = new ShowToastEvent({
-            title: title,
-            message: message,
-            variant: variant,
-        });
-        this.dispatchEvent(evt);
-    }
-
 }

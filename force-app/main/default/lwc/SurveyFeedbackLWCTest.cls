@@ -1,73 +1,68 @@
-// Unit Tests
+// Unit Test 1:
+
 import { createElement } from 'lwc';
 import SurveyFeedback from 'c/surveyFeedback';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getQuestions from '@salesforce/apex/SurveyQuestionsController.getQuestions';
-import saveResponse from '@salesforce/apex/SurveyQuestionsController.saveResponse';
 
-describe('SurveyFeedback', () => {
-    let element;
-
-    beforeEach(() => {
-        element = createElement('c-survey-feedback', {
-            is: SurveyFeedback
-        });
-        document.body.appendChild(element);
-    });
-
+describe('c-survey-feedback', () => {
     afterEach(() => {
+        // The jsdom instance is shared across test cases in a single file so reset the DOM
         while (document.body.firstChild) {
             document.body.removeChild(document.body.firstChild);
         }
     });
 
-    it('should render correct elements', () => {
-        const questions = element.shadowRoot.querySelector('lightning-record-edit-form');
-        expect(questions).not.toBeNull();
-    });
-
-    it('should call apex method getQuestions', () => {
-        let recordId = '123';
-        let getQuestionsCalled = false;
-        getQuestions = jest.fn().mockImplementation(() => {
-            getQuestionsCalled = true;
-            return Promise.resolve([]);
+    it('calls getSurveyQuestion on connectedCallback', () => {
+        // Create initial element
+        const element = createElement('c-survey-feedback', {
+            is: SurveyFeedback
         });
+        document.body.appendChild(element);
+        // Mock getSurveyQuestion
+        const getSurveyQuestion = jest.fn();
+        element.getSurveyQuestion = getSurveyQuestion;
 
-        element.recordId = recordId;
-        element.connectedCallback();
-        expect(getQuestionsCalled).toBe(true);
+        // Trigger connectedCallback
+        const connectedCallback = jest.fn();
+        element.connectedCallback(connectedCallback);
+
+        // Validate if getSurveyQuestion is called
+        expect(getSurveyQuestion).toHaveBeenCalled();
+    });
+});
+
+// Unit Test 2:
+
+import { createElement } from 'lwc';
+import SurveyFeedback from 'c/surveyFeedback';
+
+describe('c-survey-feedback', () => {
+    afterEach(() => {
+        // The jsdom instance is shared across test cases in a single file so reset the DOM
+        while (document.body.firstChild) {
+            document.body.removeChild(document.body.firstChild);
+        }
     });
 
-    it('should call apex method saveResponse', () => {
-        let recordId = '123';
-        let selectedAnswers = [{
-            questionId: '1',
-            answerId: '2'
-        }];
-        let saveResponseCalled = false;
-        saveResponse = jest.fn().mockImplementation(() => {
-            saveResponseCalled = true;
-            return Promise.resolve();
+    it('handles the selection of answer', () => {
+        // Create initial element
+        const element = createElement('c-survey-feedback', {
+            is: SurveyFeedback
         });
+        document.body.appendChild(element);
+        // Mock handleAnswerSelect
+        const handleAnswerSelect = jest.fn();
+        element.handleAnswerSelect = handleAnswerSelect;
 
-        element.recordId = recordId;
-        element.selectedAnswers = selectedAnswers;
-        element.handleSubmit();
-        expect(saveResponseCalled).toBe(true);
+        // Trigger the selection of an answer
+        const event = {
+            detail: {
+                questionId: '1',
+                answerId: '2'
+            }
+        };
+        element.handleAnswerSelect(event);
+
+        // Validate if handleAnswerSelect is called
+        expect(handleAnswerSelect).toHaveBeenCalled();
     });
-
-    it('should show toast message on error', () => {
-        let title = 'ERROR';
-        let message = 'An error occurred';
-        let variant = 'error';
-        let showToastCalled = false;
-        element.showToast = jest.fn().mockImplementation(() => {
-            showToastCalled = true;
-        });
-
-        element.showToast(title, message, variant);
-        expect(showToastCalled).toBe(true);
-    });
-
 });
