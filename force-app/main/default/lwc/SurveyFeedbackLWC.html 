@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Survey Feedback</title>
+    <link rel="stylesheet" href="https://unpkg.com/@salesforce-ux/design-system@2.10.1/assets/styles/salesforce-lightning-design-system.min.css">
+</head>
+<body>
+    <div class="slds-scope">
+        <div class="slds-size_1-of-1">
+            <c-survey-feedback record-id={recordId}></c-survey-feedback>
+        </div>
+    </div>
+    <script src="/lightning/lightning.out.js"></script>
+</body>
+</html>
